@@ -54,6 +54,10 @@ body {
   margin: 0;
 }
 
+ul {
+  list-style: none;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;
