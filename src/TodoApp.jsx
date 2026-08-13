@@ -1,5 +1,7 @@
 import "./TodoApp.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
+
+const TodoContext = createContext();
 
 export default function TodoApp() {
   const [todoList, setTodoList] = useState(() => {
@@ -36,25 +38,34 @@ export default function TodoApp() {
           ])
         }
       />
-      <FilterButtons value={filter} onFilter={(cond) => setFilter(cond) } />
-      <ul className="todo-list"> 
-        {filteredList.map((todoItem) => (
-          <TodoItem
-            key={todoItem.id}
-            value={todoItem}
-            onToggle={(isCompleted) =>
+      <FilterButtons value={filter} onFilter={(cond) => setFilter(cond)} />
+      <TodoContext.Provider value={
+        {
+          onToggle: (id, isCompleted) =>
               setTodoList((todoList) =>
-                todoList.map((item) =>
-                  item.id === todoItem.id ? { ...item, completed: isCompleted } : item,
-                ),
-              )
-            }
-            onDelete={() => 
-              setTodoList((todoList) => todoList.filter(item => item.id !== todoItem.id))
-            }
-          />
-        ))}
-      </ul>
+                  todoList.map((item) =>
+                    item.id === id
+                      ? { ...item, completed: isCompleted }
+                      : item
+                  )
+              ),
+          onDelete: (id) =>
+              setTodoList((todoList) =>
+                  todoList.filter((item) => item.id !== id
+                  )
+              ),
+              
+        }
+      }>
+        <ul className="todo-list">
+          {filteredList.map((todoItem) => (
+            <TodoItem
+              key={todoItem.id}
+              value={todoItem}
+            />
+          ))}
+        </ul>
+      </TodoContext.Provider>
     </div>
   );
 }
@@ -80,16 +91,18 @@ function TodoForm({ onAdd }) {
   );
 }
 
-function TodoItem({ value, onToggle, onDelete }) {
+function TodoItem({ value }) {
+  const { onToggle, onDelete } = useContext(TodoContext);
+
   return (
     <li className={ `todo-item ${value.completed ? 'completed' : ''}`}>
       <input
         type="checkbox"
         checked={value.completed}
-        onChange={(e) => onToggle(e.target.checked)}
+        onChange={(e) => onToggle(value.id, e.target.checked)}
       />
       <span>{value.text}</span>
-      <button onClick={ onDelete }>Delete</button>
+      <button onClick={() => onDelete(value.id) }>Delete</button>
     </li>
   );
 }
